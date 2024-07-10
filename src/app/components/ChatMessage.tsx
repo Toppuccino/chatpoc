@@ -1,6 +1,7 @@
 import React from "react";
 import { Avatar, Card } from "antd";
 import { UserOutlined } from "@ant-design/icons";
+import Title from "antd/es/typography/Title";
 
 interface ChatMessageProps {
   userId: number;
@@ -16,7 +17,16 @@ const ChatMessage: React.FC<ChatMessageProps> = ({
   const isCurrentUser = (senderId: number): boolean => senderId === 1;
 
   return isCurrentUser(userId) ? (
-    <div style={{ margin: 20, display: "flex", justifyContent: "flex-end" }}>
+    <div
+      style={{
+        margin: 20,
+        display: "flex",
+        justifyContent: "flex-end",
+      }}
+    >
+      {/* <span style={{ marginLeft: 20, marginTop: 6, color: "gray" }}>
+        {timestamp}
+      </span> */}
       <Card
         style={{
           backgroundColor: "#1476ff",
@@ -31,7 +41,13 @@ const ChatMessage: React.FC<ChatMessageProps> = ({
       <Avatar icon={<UserOutlined />} />
     </div>
   ) : (
-    <div style={{ margin: 20, display: "flex", justifyContent: "flex-start" }}>
+    <div
+      style={{
+        margin: 20,
+        display: "flex",
+        justifyContent: "flex-start",
+      }}
+    >
       <Avatar icon={<UserOutlined />} />
       <Card
         style={{
@@ -44,6 +60,9 @@ const ChatMessage: React.FC<ChatMessageProps> = ({
       >
         <p>{content}</p>
       </Card>
+      {/* <span style={{ marginLeft: 20, marginTop: 6, color: "gray" }}>
+        {timestamp}
+      </span> */}
     </div>
   );
 };
