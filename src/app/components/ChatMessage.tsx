@@ -4,19 +4,19 @@ import { UserOutlined } from "@ant-design/icons";
 import Title from "antd/es/typography/Title";
 
 interface ChatMessageProps {
-  userId: number;
+  mBy: string;
   content: string;
   timestamp: string;
 }
 
 const ChatMessage: React.FC<ChatMessageProps> = ({
-  userId,
+  mBy,
   content,
   timestamp,
 }) => {
-  const isCurrentUser = (senderId: number): boolean => senderId === 1;
+  const isCurrentUser = (senderId: string): boolean => senderId === "1";
 
-  return isCurrentUser(userId) ? (
+  return isCurrentUser(mBy) ? (
     <div
       style={{
         margin: 20,

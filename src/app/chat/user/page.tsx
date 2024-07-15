@@ -1,99 +1,193 @@
 "use client";
 
 import React, { useState, useRef, useEffect } from "react";
-import {
-  Avatar,
-  Breadcrumb,
-  Button,
-  Divider,
-  Layout,
-  List,
-  Skeleton,
-  message,
-} from "antd";
+import { Avatar, Breadcrumb, Button, Layout, List, message } from "antd";
 import TextArea from "antd/es/input/TextArea";
 import { SendOutlined, FileAddOutlined } from "@ant-design/icons";
 import { SizeType } from "antd/es/config-provider/SizeContext";
 import ChatMessage from "@/app/components/ChatMessage";
 import Link from "next/link";
-import InfiniteScroll from "react-infinite-scroll-component";
 import NavBar from "@/app/components/NavBar";
 import LeftNav from "@/app/components/LeftNav";
-import { IDataType } from "../../../../services/lists/list.model";
+import { IData } from "../../../../services/lists/list.model";
+import { useSearchParams } from "next/navigation";
 
 const { Sider, Content, Footer } = Layout;
 
-const User = "User#5213128989a";
-
 const lorem =
   "Lorem ipsum dolor sit amet consectetur adipisicing elit. Officia tempore, molestiae eligendi fugit ut sequi quas omnis soluta vel similique a nulla minima. Blanditiis necessitatibus perferendis, nostrum maxime at autem.";
+//   {
+//     id: 2,
+//     senderId: 2,
+//     content: lorem,
+//     timestamp: "2024-07-07T10:32:00",
+//   },
+//   {
+//     id: 3,
+//     senderId: 1,
+//     content: "How are you?",
+//     timestamp: "2024-07-07T10:35:00",
+//   },
+//   {
+//     id: 4,
+//     senderId: 2,
+//     content: lorem,
+//     timestamp: "2024-07-07T10:32:00",
+//   },
+//   {
+//     id: 5,
+//     senderId: 1,
+//     content: "huh",
+//     timestamp: "2024-07-07T10:32:00",
+//   },
+// ];
 
-let messages = [
-  { id: 1, senderId: 1, content: "Hello!", timestamp: "2024-07-07T10:30:00" },
+let messageArray: IData[] = [
   {
-    id: 2,
-    senderId: 2,
-    content: lorem,
-    timestamp: "2024-07-07T10:32:00",
+    user: {
+      userId: "2",
+      gender: "male",
+      name: { title: "Mr", first: "شایان", last: "نكو نظر" },
+      topMessage: "how are u?",
+      picture: {
+        large: "https://randomuser.me/api/portraits/men/38.jpg",
+        medium: "https://randomuser.me/api/portraits/med/men/38.jpg",
+        thumbnail: "https://randomuser.me/api/portraits/thumb/men/38.jpg",
+      },
+      nat: "IR",
+    },
+    message: [
+      {
+        mBy: "1",
+        mTo: "2",
+        messageId: "1",
+        content: "Hello!",
+        timestamp: "2024-07-07T10:30:00",
+      },
+      {
+        mBy: "2",
+        mTo: "1",
+        messageId: "2",
+        content: lorem,
+        timestamp: "2024-07-07T10:32:00",
+      },
+      {
+        mBy: "1",
+        mTo: "2",
+        messageId: "3",
+        content: "How are you?",
+        timestamp: "2024-07-07T10:35:00",
+      },
+      {
+        mBy: "2",
+        mTo: "1",
+        messageId: "4",
+        content: lorem,
+        timestamp: "2024-07-07T10:32:00",
+      },
+      {
+        mBy: "1",
+        mTo: "2",
+        messageId: "5",
+        content: "huh",
+        timestamp: "2024-07-07T10:32:00",
+      },
+    ],
   },
   {
-    id: 3,
-    senderId: 1,
-    content: "How are you?",
-    timestamp: "2024-07-07T10:35:00",
-  },
-  {
-    id: 4,
-    senderId: 2,
-    content: lorem,
-    timestamp: "2024-07-07T10:32:00",
-  },
-  {
-    id: 5,
-    senderId: 1,
-    content: "huh",
-    timestamp: "2024-07-07T10:32:00",
+    user: {
+      userId: "3",
+      gender: "male",
+      name: { title: "Mr", first: "Estefânio", last: "da Costa" },
+      topMessage: "HELPPPPPPPPPP",
+      picture: {
+        large: "https://randomuser.me/api/portraits/men/2.jpg",
+        medium: "https://randomuser.me/api/portraits/med/men/2.jpg",
+        thumbnail: "https://randomuser.me/api/portraits/thumb/men/2.jpg",
+      },
+      nat: "BR",
+    },
+    message: [
+      {
+        mBy: "1",
+        mTo: "3",
+        messageId: "1",
+        content: "Hello!",
+        timestamp: "2024-07-07T10:30:00",
+      },
+      {
+        mBy: "3",
+        mTo: "1",
+        messageId: "2",
+        content: "Wtf",
+        timestamp: "2024-07-07T10:32:00",
+      },
+      {
+        mBy: "3",
+        mTo: "1",
+        messageId: "3",
+        content: "ANSWERRRRRR",
+        timestamp: "2024-07-07T10:35:00",
+      },
+    ],
   },
 ];
 
-export default function Home() {
-  const currentUserId = 1;
+export default function ChatUser() {
+  const currentUserId = "1";
   const [messageInput, setMessageInput] = useState("");
   const [size, setSize] = useState<SizeType>("large");
-  const [loading, setLoading] = useState(false);
-  const [data, setData] = useState<IDataType[]>([]);
-  const messagesEndRef = useRef<HTMLDivElement>(null);
+  const [data, setData] = useState<IData[]>([]);
+  const messageArrayEndRef = useRef<HTMLDivElement>(null);
+  const searchParams = useSearchParams();
+  const targetId = searchParams.get("targetId");
+  const [pos, setPos] = useState<any>();
+
+  const init = () => {
+    if (targetId) {
+      const position = findUserPosition(messageArray, targetId);
+      setPos(position);
+    }
+    startAtBottom();
+    fetchUserData();
+  };
 
   useEffect(() => {
-    loadMoreData();
-  }, []);
-
-  useEffect(() => {
-    startAtBottom;
-  }, []);
+    init();
+  }, [targetId]);
 
   useEffect(() => {
     scrollToBottom();
-  }, [messages]);
+  }, [messageArray]);
 
-  const loadMoreData = () => {
-    if (loading) {
-      return;
-    }
-
-    setLoading(true);
-    fetch(
-      "https://randomuser.me/api/?results=10&inc=name,gender,email,nat,picture&noinfo"
-    )
-      .then((res) => res.json())
-      .then((body) => {
-        setData([...data, ...body.results]);
-        console.log({ data });
-        setLoading(false);
-      })
-      .catch(() => {
-        setLoading(false);
+  const scrollToBottom = () => {
+    if (messageArrayEndRef.current) {
+      messageArrayEndRef.current.scrollIntoView({
+        behavior: "smooth",
+        block: "end",
+        inline: "nearest",
       });
+    }
+  };
+
+  const startAtBottom = () => {
+    if (messageArrayEndRef.current) {
+      messageArrayEndRef.current.scrollTop =
+        messageArrayEndRef.current.scrollHeight;
+    }
+  };
+
+  function findUserPosition(messageArray: IData[], targetId: string) {
+    for (let i = 0; i < messageArray.length; i++) {
+      if (messageArray[i].user.userId === targetId) {
+        return i;
+      }
+    }
+  }
+
+  const fetchUserData = () => {
+    setData(messageArray);
+    // setLoading(false);
   };
 
   const handleInputChange = (event: React.ChangeEvent<HTMLTextAreaElement>) => {
@@ -107,37 +201,22 @@ export default function Home() {
       return;
     }
 
-    // Assuming you have a function to send the message to a backend or manage state
-    const newMessage = {
-      id: messages.length + 1,
-      senderId: currentUserId,
-      content: messageInput,
-      timestamp: new Date().toISOString(),
-    };
+    if (targetId) {
+      const newMessage = {
+        mBy: currentUserId.toString(),
+        mTo: targetId,
+        messageId: (messageArray[pos].message.length + 1).toString(),
+        content: messageInput,
+        timestamp: new Date().toISOString(),
+      };
 
-    messages.push(newMessage);
-    setMessageInput("");
+      messageArray[pos].message.push(newMessage);
+      console.log(newMessage);
+      setMessageInput("");
 
-    // Use setTimeout to ensure the scroll happens after the DOM updates
-    setTimeout(() => {
-      scrollToBottom();
-    }, 30);
-  };
-
-  // Function to scroll to the bottom of the messages container
-  const scrollToBottom = () => {
-    if (messagesEndRef.current) {
-      messagesEndRef.current.scrollIntoView({
-        behavior: "smooth",
-        block: "end",
-        inline: "nearest",
-      });
-    }
-  };
-
-  const startAtBottom = () => {
-    if (messagesEndRef.current) {
-      messagesEndRef.current.scrollTop = messagesEndRef.current.scrollHeight;
+      setTimeout(() => {
+        scrollToBottom();
+      }, 30);
     }
   };
 
@@ -163,32 +242,32 @@ export default function Home() {
                   scrollbarWidth: "thin",
                 }}
               >
-                <InfiniteScroll
-                  dataLength={data.length}
-                  next={loadMoreData}
-                  hasMore={data.length < 50}
-                  loader={<Skeleton avatar paragraph={{ rows: 1 }} active />}
-                  endMessage={
-                    <Divider plain>It is all, nothing more 🤐</Divider>
-                  }
-                  scrollableTarget="scrollableDiv"
-                >
-                  <List
-                    dataSource={data}
-                    renderItem={(item) => (
-                      <List.Item key={item.email}>
+                <List
+                  dataSource={data}
+                  renderItem={(item) => {
+                    const mostRecentMessage =
+                      item.message[item.message.length - 1];
+
+                    return (
+                      <List.Item key={item.user.topMessage}>
                         <List.Item.Meta
-                          avatar={<Avatar src={item.picture.large} />}
+                          avatar={<Avatar src={item.user.picture.large} />}
                           title={
-                            <Link href="/chat/user">{item.name.last}</Link>
+                            <Link
+                              href={`/chat/user?targetId=${item.user.userId}`}
+                            >
+                              {item.user.name.last}
+                            </Link>
                           }
-                          description={item.email}
+                          description={
+                            mostRecentMessage ? mostRecentMessage.content : ""
+                          }
                         />
                         <span></span>
                       </List.Item>
-                    )}
-                  />
-                </InfiniteScroll>
+                    );
+                  }}
+                />
               </div>
             </Sider>
 
@@ -196,7 +275,7 @@ export default function Home() {
               <Content style={{ padding: "0 48px" }}>
                 <Breadcrumb style={{ margin: "16px 0" }}>
                   <Breadcrumb.Item>Chat</Breadcrumb.Item>
-                  <Breadcrumb.Item>{User}</Breadcrumb.Item>
+                  <Breadcrumb.Item>{targetId}</Breadcrumb.Item>
                 </Breadcrumb>
                 <div
                   className="h-screen"
@@ -207,16 +286,20 @@ export default function Home() {
                     overflowY: "auto",
                   }}
                 >
-                  {messages.map((message) => (
-                    <ChatMessage
-                      key={message.id}
-                      userId={message.senderId}
-                      content={message.content}
-                      timestamp={message.timestamp}
-                    />
-                  ))}
-                  <div ref={messagesEndRef} />
+                  {messageArray[pos] &&
+                    messageArray[pos].message.map((message) => (
+                      <ChatMessage
+                        key={message.messageId}
+                        mBy={message.mBy}
+                        content={message.content}
+                        timestamp={message.timestamp}
+                      />
+                    ))}
+                  <div ref={messageArrayEndRef} />
                 </div>
+                {/* {pos !== undefined && (
+                  <ChatInterface messages={messageArray[pos].message} />
+                )} */}
               </Content>
 
               <Footer style={{ textAlign: "center" }}>
